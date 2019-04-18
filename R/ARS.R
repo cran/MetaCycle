@@ -2,9 +2,6 @@
 ### Email: cauyrd@gmail.com
 ### Associated literature: Rendong Yang and Zhen Su. Bioinformatics. 26(12):i168-74 (2010). 
 ### Website: http://bioinformatics.cau.edu.cn/ARSER/
-### R script of ARSER: Gang Wu
-### Email: wggucas@gmail.com
-### Lab: John Hogenesch's lab in Perelman School of Medicine at University of Pennsylvania (http://hogeneschlab.org/)
 ###======================================================================================================================================
 detrend_linear<-function(y)
 {
@@ -15,14 +12,9 @@ detrend_linear<-function(y)
   return ( y- (b*x+a) );
 }
 ###-----------------------------------------------------------------------------
-###applies a Savitzky-Golay filter
-savitzky_golay<-function(data, kernel=11, order=4)         
+savitzky_golay <- function(data, kernel=11, order=4)  ###applies a Savitzky-Golay filter       
 {
-  ##input parameters:
-  ##data => data as a vector type
-  ##kernel => a positiv integer > 2*order giving the kernel size
-  ##order => order of the polynomal
-  ##returns smoothed data as a vector type
+  ##input parameters, data => data as a vector type; kernel => a positiv integer > 2*order giving the kernel size; order => order of the polynomal; returns smoothed data as a vector type
   ##-----------------------
   if ( (round(kernel)!=kernel) | (round(order)!=order) | (kernel<1) | (order<1) ) 
   { stop("The input values of kernel and order in 'savitzky_golay' should be positive integers."); }
@@ -47,8 +39,8 @@ savitzky_golay<-function(data, kernel=11, order=4)
   }
   b=matrix(b,nrow=half_window*2+1,ncol=length(order_range),byrow=TRUE);
   ##-----------------------
-  ##'MPinv()' based on 'gnm' package in R can calculate the 'Moore-Penrose pseudo-inverse matrix' as 'numpy.linalg.pinv' in python
-  #library(gnm);
+  ## the "MPinv()" function based on "gnm" package in R can calculate the "Moore-Penrose pseudo-inverse matrix" as "numpy.linalg.pinv" in python
+  # library(gnm);
   m=MPinv(b);
   m=m[1,];
   window_size=length(m);
@@ -173,14 +165,13 @@ get_period<-function(per.x,per.dt_y,per.delta,per.pID="",is_filter=TRUE,ar_metho
   {
     periods=NA;
   } else {
-    peaks_loc=c(NA,0);
-    for (i in 2:(num_freq_mese-1))                         #search all the local peaks of maximum entropy spectrum
-    {
-      if ( ( mese$spec[i] > mese$spec[i+1] ) & ( mese$spec[i] > mese$spec[i-1] ) )
-      {
-        peaks_loc=rbind(peaks_loc,c(mese$spec[i],i) );
-      }
-    }
+    peaks_loc=c(NA,0)
+    im1 <- mese$spec[1:(num_freq_mese-2)]
+    iv <- mese$spec[2:(num_freq_mese-1)]
+    ip1 <- mese$spec[3:(num_freq_mese)]
+    idx <- (iv > ip1) & (iv > im1)
+    vec <- cbind(iv[idx],which(idx)+1)
+    if(nrow(vec)>0) peaks_loc <- rbind(peaks_loc,vec)
     if (is.vector(peaks_loc)) {
 		periods=NA;
 	} else {
@@ -284,7 +275,7 @@ evaluate<-function(eva.x,eva.y,eva.delta,eva.pID="",T_start=20, T_end=28, T_defa
   return (eva.out);
 }
 ###======================================================================================================================================
-runARS <- function(indata,ARStime,minper=20,maxper=28, arsper=24, arsmet="", releaseNote=TRUE)
+runARS <- function(indata,ARStime,minper=20,maxper=28, arsper=24, arsmet="", releaseNote=TRUE, para = FALSE, ncores = 1)
 {
   #-----------------------
   if (releaseNote)  {
@@ -303,41 +294,45 @@ runARS <- function(indata,ARStime,minper=20,maxper=28, arsper=24, arsmet="", rel
   names(outID)<-idorder;
   dimnames(dataM)<-list("r"=idorder,"c"=paste("T",self.delta*(0:(ncol(dataM)-1)),sep="" ) );
   #-----------------------
-  expSD<-apply(dataM,1,sd);
-  expMEAN<-apply(dataM,1,mean);
-  constantID<-names(expSD[expSD == 0]);
-  flagV<-rep(1,length(idorder));
-  names(flagV)<-idorder;
-  flagV[constantID]<-0;
-  #-----------------------
   run_start=proc.time();
   set.seed(run_start["elapsed"]);
   header <- c("filter_type","ar_method","period_number","period","amplitude","phase","mean","R_square","R2_adjust","coef_var","pvalue");
-  ars.outM <- header;
+  
   ori.op <- options();
   #-----------------------
   ##try 'apply()' in latter version, it may improve the Computational Efficiency
-  for (line in idorder )
-  {
-    if (flagV[line]) {
-		d=evaluate(eva.x=time_points,eva.y=dataM[line,],eva.delta=self.delta,eva.pID=line,T_start=start, T_end=end, T_default=arsper,arsmethods=arsmet);
-		ars.filter=0;
-		if (d$filter)
-		{ ars.filter=1; }
-		ars.period.num=length(d$period);
-		ars.period=paste(d$period,collapse=",");
-		ars.amplitude=paste(d$amplitude,collapse=",");
-		ars.phase=paste(d$phase,collapse=",");
-		ars.out=c(ars.filter,d$armethod,ars.period.num,ars.period,ars.amplitude,ars.phase,mean(dataM[line,]),d$R2,d$R2adj,d$coefvar,d$pvalue);
-		pvalues=c(pvalues,d$pvalue);
-	} else {
-		ars.out=c(rep(NA,4),0,NA,expMEAN[line],rep(NA,3),1);                           
-		pvalues=c(pvalues,1);                                #assign it as '1' insead of 'NA' for avoiding error report in 'pi0.est' step
-	}
-    ars.outM=rbind(ars.outM,ars.out);
+  mainars <- function(y){
+      if (sd(y)!=0) {
+        d=evaluate(eva.x=time_points,eva.y=y,eva.delta=self.delta,eva.pID=line,T_start=start, T_end=end, T_default=arsper,arsmethods=arsmet);
+        ars.filter=0;
+        if (d$filter)
+        { ars.filter=1; }
+        ars.period.num=length(d$period);
+        ars.period=paste(d$period,collapse=",");
+        ars.amplitude=paste(d$amplitude,collapse=",");
+        ars.phase=paste(d$phase,collapse=",");
+        ars.out=c(ars.filter,d$armethod,ars.period.num,ars.period,ars.amplitude,ars.phase,mean(y),d$R2,d$R2adj,d$coefvar,d$pvalue);
+        pvalues=c(pvalues,d$pvalue);
+      } else {
+        ars.out=c(rep(NA,4),0,NA,mean(y),rep(NA,3),1);                           
+        pvalues=c(pvalues,1);                                #assign it as '1' insead of 'NA' for avoiding error report in 'pi0.est' step
+      }
+    return(ars.out)
   }
-  pvalues=pvalues[2:length(pvalues)];
-  ars.outM=ars.outM[2:nrow(ars.outM),];
+
+  if(para){
+    tmpout <- parallel::mclapply(idorder,function(i) mainars(dataM[i,]), mc.cores = ncores)
+    ars.outM = do.call(rbind,tmpout)
+  }else{
+    ars.outM <- matrix(ncol=11,nrow=0)
+    for (line in idorder )
+    {
+      ars.out <- mainars(dataM[line,])
+      ars.outM=rbind(ars.outM,ars.out);
+    }
+  }
+  colnames(ars.outM) <- header
+  pvalues=ars.outM[,"pvalue"]
   options(ori.op);
   dimnames(ars.outM)[[1]]=idorder;
   names(pvalues)=idorder;
@@ -349,7 +344,9 @@ runARS <- function(indata,ARStime,minper=20,maxper=28, arsper=24, arsmet="", rel
   # qvalues=qvalue.cal(pvalues[idorder],pi0$p0);
   header=c("CycID",header,"fdr_BH");
   qvalues_BH=p.adjust(pvalues[idorder],"BH");
-  ARSoutM=cbind(outID[idorder],ars.outM[idorder,],qvalues_BH);
+  ARSoutM=cbind(outID[idorder],ars.outM[idorder,],
+                as.character(qvalues_BH)); # convert to char here keeps more precision
+  ARSoutM <- as.matrix(ARSoutM)
   dimnames(ARSoutM)<-list("r"=idorder,"c"=header);
   if (releaseNote)  {
 	cat("The analysis by ARS is finished at ",format(Sys.time(), "%X %m-%d-%Y"),"\n");

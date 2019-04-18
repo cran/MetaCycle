@@ -1,6 +1,6 @@
 ##' @name cycMouseLiverRNA
 ##' @title cycMouseLiverRNA
-##' @description This data set lists expression profiles of 20 circadian
+##' @description This data set lists expression profiles of 10 circadian
 ##'   transcripts with 1h-resolution covering two days.
 ##' @docType data
 ##' @usage cycMouseLiverRNA

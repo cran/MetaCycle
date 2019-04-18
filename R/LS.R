@@ -24,30 +24,41 @@ ComputeLombScargle <- function(t, h, TestFrequencies, Nindependent)           ##
   # SpectralPowerDensity will be evaluated at given TestFrequencies.
   # Nindepedent of the TestFrequencies are assumed to be independent.
   #----------------------
-  stopifnot( length(t) == length(h) )                                        
-  if (length(t) > 0)
-  {
-    Nyquist <- 1 / (2 * ( (max(t) - min(t) )/ length(t) ) )                   ##get the value of Nyquist(the highest frequency for which the unevenly spaced data may be evaluated)
-    hResidual    <- h - mean(h)                                               
-    SpectralPowerDensity <- rep(0, length(TestFrequencies))       
-    for (i in 1:length(TestFrequencies))
-    {
-      ##The values (eg. Omega, TwoOmegaT, Tau, OmegaTMinusTau, and SpectralPowerDensity) are calculated using the formula mentioned in the Lomb-Scargle paper.
-   	  Omega       <- 2*pi*TestFrequencies[i]                                  
-      TwoOmegaT   <- 2*Omega*t          
-      Tau         <- atan2( sum(sin(TwoOmegaT)) , sum(cos(TwoOmegaT)) ) / (2*Omega)            ##for positive arguments atan2(y, x) == atan(y/x)
-      OmegaTMinusTau <- Omega * (t - Tau)     
-      SpectralPowerDensity[i] <- (sum (hResidual * cos(OmegaTMinusTau))^2) / sum( cos(OmegaTMinusTau)^2 ) + 
+  stopifnot( length(t) == length(h) ) 
+  #modify here considering the situation of 'var(h)=0' for treating those rows with constant values (e.g. all values are 0); note: this was did this on May 4, 2017
+  if (length(t) > 0) 
+  { 
+    if (stats::var(h) != 0)  {
+        Nyquist <- 1 / (2 * ( (max(t) - min(t) )/ length(t) ) )                   ##get the value of Nyquist(the highest frequency for which the unevenly spaced data may be evaluated)
+        hResidual    <- h - mean(h)                                               
+        SpectralPowerDensity <- rep(0, length(TestFrequencies))       
+        for (i in 1:length(TestFrequencies))
+        {
+            ##The values (eg. Omega, TwoOmegaT, Tau, OmegaTMinusTau, and SpectralPowerDensity) are calculated using the formula mentioned in the Lomb-Scargle paper.
+            Omega       <- 2*pi*TestFrequencies[i]                                  
+            TwoOmegaT   <- 2*Omega*t          
+            Tau         <- atan2( sum(sin(TwoOmegaT)) , sum(cos(TwoOmegaT)) ) / (2*Omega)            ##for positive arguments atan2(y, x) == atan(y/x)
+            OmegaTMinusTau <- Omega * (t - Tau)     
+            SpectralPowerDensity[i] <- (sum (hResidual * cos(OmegaTMinusTau))^2) / sum( cos(OmegaTMinusTau)^2 ) + 
                                 (sum (hResidual * sin(OmegaTMinusTau))^2) / sum( sin(OmegaTMinusTau)^2 )
-    }
-    # The "normalized" spectral density refers to the variance term in the denominator. 
+          }
+        # The "normalized" spectral density refers to the variance term in the denominator. 
 	# With this term the SpectralPowerDensity has an exponential probability distribution with unit mean.
-    SpectralPowerDensity <- SpectralPowerDensity / ( 2 * var(h) )             
-    Probability <- 1 - (1-exp(-SpectralPowerDensity))^Nindependent            ##get the probability
-    PeakIndex    <- match(max(SpectralPowerDensity), SpectralPowerDensity)    ##get the the peak index
-    # Note:  Might merit more investigation when PeakIndex is the first point.
-    PeakPeriod <- 1 / TestFrequencies[PeakIndex]                              ##get the period length corresponding to the peak index with largest normalized spectral power density value
-    PeakPvalue <- Probability[PeakIndex]                                      ##get the corresponding p-value to the peak index with largest normalized spectral power density value
+        SpectralPowerDensity <- SpectralPowerDensity / ( 2 * stats::var(h) )             
+        Probability <- 1 - (1-exp(-SpectralPowerDensity))^Nindependent            ##get the probability
+        PeakIndex    <- match(max(SpectralPowerDensity), SpectralPowerDensity)    ##get the the peak index
+        # Note:  Might merit more investigation when PeakIndex is the first point.
+        PeakPeriod <- 1 / TestFrequencies[PeakIndex]                              ##get the period length corresponding to the peak index with largest normalized spectral power density value
+        PeakPvalue <- Probability[PeakIndex]                                      ##get the corresponding p-value to the peak index with largest normalized spectral power density value
+    }  else  {
+	#all the values are same
+        Nyquist     <- NA
+        Probability <- 1.0
+        PeakIndex   <- NA
+        SpectralPowerDensity <- NA
+        PeakPeriod  <- NA
+        PeakPvalue  <- 1.0  
+    }
   } else {                                                                    
     # Time series has 0 points
     Nyquist     <- NA
@@ -63,8 +74,11 @@ ComputeLombScargle <- function(t, h, TestFrequencies, Nindependent)           ##
 				PeakPeriod=PeakPeriod,PeakPvalue=PeakPvalue,N=length(h),Nindependent=Nindependent) )
 }
 #-------------------------------------------------------------------------------------------
-ComputeAndPlotLombScargle <- function(t, h, TestFrequencies, Nindependent)    ##'ComputeAndPlotLombScargle' function is from Lomb-Scargle.R
-{
+ComputeAndPlotLombScargle <- function(t, h, TestFrequencies, Nindependent, para = FALSE, ncores = 1)    ##'ComputeAndPlotLombScargle' function is from Lomb-Scargle.R
+{ 
+  if (para){
+    h <- unlist(h)
+  }
   h <- h[ order(t) ]                                                          # order expression values in ascending time order   
   t <- t[ order(t) ]                                                          # order time points in ascending time order
   t2 <- t[!(is.na(h) | is.nan(h))]                                            # Remove missing (na) and not-a-number (NaN) expression values    
@@ -78,9 +92,9 @@ ComputeAndPlotLombScargle <- function(t, h, TestFrequencies, Nindependent)    ##
   if (N > 5)                                            
   {
     # Compute loess smoothed curve and find peak (assume only one for now)
-    loess.fit <- loess(h ~ t, data.frame(t=t, h=h))                        
-    h.loess   <- predict(loess.fit, data.frame(t=t))                        
-    h.peak    <- optimize(function(t, model)  predict(model, data.frame(t=t)), c(min(t),max(t)),maximum=TRUE,model=loess.fit)
+    loess.fit <- stats::loess(h ~ t, data.frame(t=t, h=h))                        
+    h.loess   <- stats::predict(loess.fit, data.frame(t=t))                        
+    h.peak    <- stats::optimize(function(t, model)  stats::predict(model, data.frame(t=t)), c(min(t),max(t)),maximum=TRUE,model=loess.fit)
 						                                                      ##get the maximum value of smoothed profile value and its corresponding time points value
     LS$h.loess   <- h.loess 
     LS$h.peak    <- h.peak 
@@ -91,7 +105,7 @@ ComputeAndPlotLombScargle <- function(t, h, TestFrequencies, Nindependent)    ##
   return(LS)
 }
 ###======================================================================================================================================
-runLS <- function(indata,LStime,minper=20,maxper=28,releaseNote=TRUE)
+runLS <- function(indata,LStime,minper=20,maxper=28,releaseNote=TRUE, para = FALSE, ncores = 1)
 {
 	if (releaseNote)  {
 		cat("The LS is in process from ", format(Sys.time(), "%X %m-%d-%Y"),"\n");
@@ -122,17 +136,32 @@ runLS <- function(indata,LStime,minper=20,maxper=28,releaseNote=TRUE)
 	header<-c("CycID","PhaseShift","PhaseShiftHeight","PeakIndex",
 	          "PeakSPD","Period","p","N","Nindependent","Nyquist");
 	LSoutM<-header;
-	for (j in 1:length(outID))                                                     
-	{
-		if (.Platform$OS.type == "windows")                                       
-		{ flush.console(); }                                                       # display immediately in Windows 
-		Nindependent <- NHorneBaliunas(sum(!is.na(Expression[j,]))); 
-		LS <- ComputeAndPlotLombScargle(Time, Expression[j,], TestFrequencies, Nindependent);
-		LSoutM <- rbind(LSoutM,c(outID[j], LS$h.peak$maximum,LS$h.peak$objective, LS$PeakIndex,LS$PeakSPD, 
-							  LS$PeakPeriod, LS$PeakPvalue, LS$N, LS$Nindependent,  LS$Nyquist));
+	if (para){
+	  j <- 1:length(outID)
+	  Nindependent <- apply(Expression[j,], 1, function(x){NHorneBaliunas(sum(!is.na(x)))} )
+	  h <- split(Expression[j,], row(Expression[j,])) 
+	  data <- parallel::mcmapply(ComputeAndPlotLombScargle, h, Nindependent, TRUE, MoreArgs = list(TestFrequencies= TestFrequencies,t=Time), SIMPLIFY = FALSE, mc.cores = ncores )
+	  rows <- parallel::mcmapply(	  
+	    function(j,LS){
+	      c(outID[j], LS$h.peak$maximum,LS$h.peak$objective, LS$PeakIndex,LS$PeakSPD, 
+	      LS$PeakPeriod, LS$PeakPvalue, LS$N, LS$Nindependent,  LS$Nyquist)
+	    }, 
+	    j,data, mc.cores = ncores)
+	  LSoutM <- t(rows)
+	  rm(rows,data)
+	}else{
+	  for (j in 1:length(outID))                                                     
+	  {
+	    if (.Platform$OS.type == "windows")                                       
+	    { flush.console(); }                                                       # display immediately in Windows 
+	    Nindependent <- NHorneBaliunas(sum(!is.na(Expression[j,]))); 
+	    LS <- ComputeAndPlotLombScargle(Time, Expression[j,], TestFrequencies, Nindependent);
+	    LSoutM <- rbind(LSoutM,c(outID[j], LS$h.peak$maximum,LS$h.peak$objective, LS$PeakIndex,LS$PeakSPD, 
+	                             LS$PeakPeriod, LS$PeakPvalue, LS$N, LS$Nindependent,  LS$Nyquist));
+	  }
+	  LSoutM<-LSoutM[2:nrow(LSoutM),];
 	}
-	LSoutM<-LSoutM[2:nrow(LSoutM),];
-    colnames(LSoutM) <- header;
+  colnames(LSoutM) <- header;
 	bhq <- p.adjust(as.numeric(LSoutM[,"p"]),"BH");
 	LSoutM <- cbind(LSoutM,bhq);	       
 	dimnames(LSoutM)<-list("r"=1:length(outID),"c"=c(header,"BH.Q"));
