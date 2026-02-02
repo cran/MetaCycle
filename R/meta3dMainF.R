@@ -155,17 +155,32 @@
 ##'
 ##' @examples
 ##' # write 'cycHumanBloodData' and 'cycHumanBloodDesign' into two 'csv' files
-##' write.csv(cycHumanBloodData, file="cycHumanBloodData.csv",
+##' # replace 'temp_indir' with your target directory
+##' temp_indir <- tempdir()
+##' cycHumanBloodData_infile <- file.path(temp_indir, "cycHumanBloodData.csv")
+##' cycHumanBloodDesign_infile <- file.path(temp_indir, "cycHumanBloodDesign.csv")
+##' 
+##' write.csv(cycHumanBloodData, file=cycHumanBloodData_infile,
 ##'   row.names=FALSE)
-##' write.csv(cycHumanBloodDesign, file="cycHumanBloodDesign.csv",
+##' write.csv(cycHumanBloodDesign, file=cycHumanBloodDesign_infile,
 ##'   row.names=FALSE)
 ##'
+##' # replace 'temp_outdir' with your target directory
+##' temp_outdir <- file.path(temp_indir, "example")
+##' # create the "example" directory (if it doesn't exist)
+##' if (!dir.exists(temp_outdir)) {
+##' dir.create(temp_outdir, recursive = TRUE)
+##' }
+##' 
 ##' # detect circadian transcripts with JTK in studied individuals
-##' meta3d(datafile="cycHumanBloodData.csv", cycMethodOne="JTK",
-##'   designfile="cycHumanBloodDesign.csv", outdir="example",
+##' meta3d(datafile=cycHumanBloodData_infile, cycMethodOne="JTK",
+##'   designfile=cycHumanBloodDesign_infile, outdir=temp_outdir,
 ##'   filestyle="csv", design_libColm=1, design_subjectColm=2,
 ##'   design_hrColm=4, design_groupColm=3)
 ##' @export
+##' @importFrom gnm MPinv
+##' @importFrom utils read.table write.table flush.console
+##' @importFrom stats cov lm median p.adjust pchisq pf pnorm pt sd spec.ar var wilcox.test
 
 meta3d <- function(datafile, designfile, outdir="metaout", filestyle,
                     design_libColm, design_subjectColm, minper=20, maxper=28,

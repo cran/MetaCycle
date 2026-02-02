@@ -4,8 +4,10 @@
 \name{cycSimu4h2d}
 \alias{cycSimu4h2d}
 \title{cycSimu4h2d}
-\format{A dataframe containing 13 columns(column 1 = curve ID, column 2 to
-  13 = time points from 0 to 44).}
+\format{
+A dataframe containing 13 columns(column 1 = curve ID, column 2 to
+  13 = time points from 0 to 44).
+}
 \source{
 Wu G., Zhu J., Yu J., Zhou L., Huang J. Z. and  Zhang Z. (2014).
   Evaluation of five methods for genome-wide circadian gene identification.

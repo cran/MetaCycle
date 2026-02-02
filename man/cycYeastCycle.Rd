@@ -4,9 +4,11 @@
 \name{cycYeastCycle}
 \alias{cycYeastCycle}
 \title{cycYeastCycle}
-\format{A dataframe containing 12 columns(column 1 = transcript name,
+\format{
+A dataframe containing 12 columns(column 1 = transcript name,
   column 2 to 12 = time points from 2 minutes to 162 minutes after
-  recovery phase).}
+  recovery phase).
+}
 \source{
 Orlando D. A., et al. (2008). Global control of cell-cycle
   transcription by coupled CDK and network oscillators. \emph{Nature},

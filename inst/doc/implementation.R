@@ -1,17 +1,17 @@
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 library(MetaCycle)
 head(cycMouseLiverRNA[,1:5])
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 set.seed(100)
 row_index <- sample(1:nrow(cycHumanBloodDesign), 4)
 cycHumanBloodDesign[row_index,]
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 sample_id <- cycHumanBloodDesign[row_index,1]
 head(cycHumanBloodData[,c("ID_REF", sample_id)])
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 group_index <- which(cycHumanBloodDesign[, "group"] == "SleepExtension")
 cycHumanBloodDesignSE <- cycHumanBloodDesign[group_index,]
 sample_index <- which(cycHumanBloodDesignSE[, "subject"] == "AF0004")
@@ -19,16 +19,16 @@ sample_AF0004 <- cycHumanBloodDesignSE[sample_index, "sample_library"]
 cycHumanBloodDataSE_AF0004 <- cycHumanBloodData[, c("ID_REF", sample_AF0004)]
 head(cycHumanBloodDataSE_AF0004)
 
-## ---- echo=FALSE, warning=FALSE, out.width = "640px"---------------------
+## ----echo=FALSE, warning=FALSE, out.width = "640px"---------------------------
 knitr::include_graphics("./images/image1.png")
 
-## ---- echo=FALSE, warning=FALSE, out.width = "640px"---------------------
+## ----echo=FALSE, warning=FALSE, out.width = "640px"---------------------------
 knitr::include_graphics("./images/image2.png")
 
-## ---- echo=FALSE, warning=FALSE, out.width = "640px"---------------------
+## ----echo=FALSE, warning=FALSE, out.width = "640px"---------------------------
 knitr::include_graphics("./images/image3.png")
 
-## ---- warning=FALSE------------------------------------------------------
+## ----warning=FALSE------------------------------------------------------------
 # given three phases
 pha <- c(0.9, 0.6, 23.6)
 # their corresponding periods
@@ -43,7 +43,7 @@ polar_mean <- atan2(mean(sin(polar)), mean(cos(polar)))
 pha_mean <- per_mean*polar_mean/(2*pi)
 pha_mean
 
-## ---- echo=FALSE, warning=FALSE, fig.width=6.65, fig.height=5------------
+## ----echo=FALSE, warning=FALSE, fig.width=6.65, fig.height=5------------------
 getAMP <- function(expr, per, pha, tim=18:65)
 { 
     trendt <- tim - mean(tim[!is.na(tim) & !is.nan(tim)])
@@ -79,7 +79,7 @@ text(rep(1,3), c(8, 5, 2), c("Base = ", "Trend = ", "AMP = "), adj=0)
 text_value <- unlist(ampL)
 text(rep(6,6), c(8, 5, 2), round(text_value[1:3], 1), adj=0)
 
-## ---- echo=FALSE, warning=FALSE, fig.width=6.65, fig.height=5------------
+## ----echo=FALSE, warning=FALSE, fig.width=6.65, fig.height=5------------------
 cirD <- cycVignettesAMP
 cirM <- as.matrix(cirD[2:3, 24:71])
 expmax <- apply(cirM, 1, max)

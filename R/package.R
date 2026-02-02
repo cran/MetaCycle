@@ -1,7 +1,8 @@
 ##' MetaCycle
 ##' Evaluate Periodicity in Large Scale Data
 ##' @name MetaCycle
-##' @docType package
+##' @keywords internal
+##' "_PACKAGE"
 ##' @author
 ##' Gang Wu \email{wggucas@@gmail.com},
 ##' Ron Anafi \email{ranafi@@gmail.com},

@@ -5,16 +5,34 @@
 \title{Detect rhythmic signals from time-series datasets with individual
   information}
 \usage{
-meta3d(datafile, designfile, outdir = "metaout", filestyle,
-  design_libColm, design_subjectColm, minper = 20, maxper = 28,
-  cycMethodOne = "JTK", timeUnit = "hour", design_hrColm,
-  design_dayColm = NULL, design_minColm = NULL,
-  design_secColm = NULL, design_groupColm = NULL,
-  design_libIDrename = NULL, adjustPhase = "predictedPer",
-  combinePvalue = "fisher", weightedMethod = TRUE,
-  outIntegration = "both", ARSmle = "auto", ARSdefaultPer = 24,
-  dayZeroBased = FALSE, outSymbol = "", parallelize = FALSE,
-  nCores = 1)
+meta3d(
+  datafile,
+  designfile,
+  outdir = "metaout",
+  filestyle,
+  design_libColm,
+  design_subjectColm,
+  minper = 20,
+  maxper = 28,
+  cycMethodOne = "JTK",
+  timeUnit = "hour",
+  design_hrColm,
+  design_dayColm = NULL,
+  design_minColm = NULL,
+  design_secColm = NULL,
+  design_groupColm = NULL,
+  design_libIDrename = NULL,
+  adjustPhase = "predictedPer",
+  combinePvalue = "fisher",
+  weightedMethod = TRUE,
+  outIntegration = "both",
+  ARSmle = "auto",
+  ARSdefaultPer = 24,
+  dayZeroBased = FALSE,
+  outSymbol = "",
+  parallelize = FALSE,
+  nCores = 1
+)
 }
 \arguments{
 \item{datafile}{a character string. The name of data file containing
@@ -156,7 +174,7 @@ This function is originally aimed to analyze large scale periodic data with
   different characters between library ID in these two files, try
   \code{design_libIDrename} to keep them same.
 
-\code{ARS}, \code{JTK} or \code{LS} could be used to analyze time-series
+  \code{ARS}, \code{JTK} or \code{LS} could be used to analyze time-series
   profiles individual by individual. \code{meta3d} requires that all
   individuals should be analyzed by the same method before integrating
   calculated p-value, period, phase, baseline value, amplitude and relative
@@ -167,7 +185,7 @@ This function is originally aimed to analyze large scale periodic data with
   method for the specific dataset. \code{meta3d} also help users select
   the suitable method through warning notes.
 
-P-values from different individuals are integrated with Fisher's method
+  P-values from different individuals are integrated with Fisher's method
   (\code{"fisher"})(Fisher,1925; implementation code from \pkg{MADAM}).For
   short time-series profiles(eg. 10 time points or less), p-values given by
   Lomb-Scargle may be over conservative, which will also lead to
@@ -187,14 +205,26 @@ P-values from different individuals are integrated with Fisher's method
 }
 \examples{
 # write 'cycHumanBloodData' and 'cycHumanBloodDesign' into two 'csv' files
-write.csv(cycHumanBloodData, file="cycHumanBloodData.csv",
+# replace 'temp_indir' with your target directory
+temp_indir <- tempdir()
+cycHumanBloodData_infile <- file.path(temp_indir, "cycHumanBloodData.csv")
+cycHumanBloodDesign_infile <- file.path(temp_indir, "cycHumanBloodDesign.csv")
+
+write.csv(cycHumanBloodData, file=cycHumanBloodData_infile,
   row.names=FALSE)
-write.csv(cycHumanBloodDesign, file="cycHumanBloodDesign.csv",
+write.csv(cycHumanBloodDesign, file=cycHumanBloodDesign_infile,
   row.names=FALSE)
 
+# replace 'temp_outdir' with your target directory
+temp_outdir <- file.path(temp_indir, "example")
+# create the "example" directory (if it doesn't exist)
+if (!dir.exists(temp_outdir)) {
+dir.create(temp_outdir, recursive = TRUE)
+}
+
 # detect circadian transcripts with JTK in studied individuals
-meta3d(datafile="cycHumanBloodData.csv", cycMethodOne="JTK",
-  designfile="cycHumanBloodDesign.csv", outdir="example",
+meta3d(datafile=cycHumanBloodData_infile, cycMethodOne="JTK",
+  designfile=cycHumanBloodDesign_infile, outdir=temp_outdir,
   filestyle="csv", design_libColm=1, design_subjectColm=2,
   design_hrColm=4, design_groupColm=3)
 }

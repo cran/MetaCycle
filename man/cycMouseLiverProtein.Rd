@@ -4,9 +4,11 @@
 \name{cycMouseLiverProtein}
 \alias{cycMouseLiverProtein}
 \title{cycMouseLiverProtein}
-\format{A dataframe containing 49 columns(column 1 = protein name,
+\format{
+A dataframe containing 49 columns(column 1 = protein name,
   column 2 to 49 = time points from CT0 to CT45 with three replicates
-  at each time point).}
+  at each time point).
+}
 \source{
 Robles M. S., Cox J., Mann M. (2014). In-vivo quantitative
   proteomics reveals a key contribution of post-transcriptional

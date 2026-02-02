@@ -4,7 +4,8 @@
 \name{cycVignettesAMP}
 \alias{cycVignettesAMP}
 \title{cycVignettesAMP}
-\format{A dataframe containing 71 columns described as below:
+\format{
+A dataframe containing 71 columns described as below:
   \tabular{rlll}{
         [,1] \tab CycID                 \tab character  \tab transcript name\cr
         [,2] \tab ARS_pvalue            \tab numeric    \tab pvalue from ARS\cr
@@ -30,7 +31,8 @@
        [,22] \tab meta2d_AMP            \tab numeric    \tab amplitude given by meta2d\cr
        [,23] \tab meta2d_rAMP           \tab numeric    \tab relative amplitude\cr
     [,24:71] \tab CT18 to CT65          \tab numeric    \tab sampling time point
-  }}
+  }
+}
 \source{
 Hughes M. E., et al. (2009). Harmonics of circadian gene
   transcription in mammals. \emph{PLoS Genet}, \bold{5(4)}, e1000442.

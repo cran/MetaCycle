@@ -4,8 +4,10 @@
 \name{cycMouseLiverRNA}
 \alias{cycMouseLiverRNA}
 \title{cycMouseLiverRNA}
-\format{A dataframe containing 49 columns(column 1 = transcript name,
-  column 2 to 49 = time points from CT18 to CT65).}
+\format{
+A dataframe containing 49 columns(column 1 = transcript name,
+  column 2 to 49 = time points from CT18 to CT65).
+}
 \source{
 Hughes M. E., et al. (2009). Harmonics of circadian gene
   transcription in mammals. \emph{PLoS Genet}, \bold{5(4)}, e1000442.

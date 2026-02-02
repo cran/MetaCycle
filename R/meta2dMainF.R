@@ -3,11 +3,7 @@
 ##' This is a function that incorporates ARSER, JTK_CYCLE and Lomb-Scargle to
 ##'   detect rhythmic signals from time-series datasets.
 ##'
-##' \href{https://github.com/cauyrd/ARSER}{ARSER}(Yang, 2010),
-##'   \href{http://openwetware.org/wiki/HughesLab:JTK_Cycle}{JTK_CYCLE}(
-##'   Hughes, 2010), and
-##'   \href{https://academic.oup.com/bioinformatics/article/22/3/310/220284}{
-##'   Lomb-Scargle}(Glynn, 2006) are three popular methods of detecting
+##' ARSER(Yang, 2010), JTK_CYCLE(Hughes, 2010), and Lomb-Scargle(Glynn, 2006) are three popular methods of detecting
 ##'   rhythmic signals. \code{ARS} can not analyze unevenly sampled datasets,
 ##'   or evenly sampled datasets but with missing values, or with replicate
 ##'   samples, or with non-integer sampling interval. \code{JTK} is not
@@ -40,8 +36,7 @@
 ##'   could be selected, and \code{"bonferroni"} is usually more conservative
 ##'   than \code{"fisher"}. The integrated period is arithmetic mean of
 ##'   multiple periods. For integrating phase, \code{meta2d} takes use of
-##'   \href{https://en.wikipedia.org/wiki/Mean_of_circular_quantities}{
-##'   mean of circular quantities}. Integrated period and phase is further
+##'   mean of circular quantities. Integrated period and phase is further
 ##'   used to calculate the baseline value and amplitude through fitting a
 ##'   constructed periodic model.
 ##'
@@ -174,38 +169,52 @@
 ##' @examples
 ##' # write 'cycSimu4h2d', 'cycMouseLiverRNA' and 'cycYeastCycle' into three
 ##' # 'csv' files
-##' write.csv(cycSimu4h2d, file="cycSimu4h2d.csv", row.names=FALSE)
-##' write.csv(cycMouseLiverRNA, file="cycMouseLiverRNA.csv", row.names=FALSE)
-##' write.csv(cycYeastCycle, file="cycYeastCycle.csv", row.names=FALSE)
+##' # replace 'temp_indir' with your target directory
+##' temp_indir <- tempdir()
+##' cycSimu_infile <-  file.path(temp_indir, "cycSimu4h2d.csv")
+##' cycMouseLiverRNA_infile <- file.path(temp_indir, "cycMouseLiverRNA.csv")
+##' cycYeastCycle_infile <- file.path(temp_indir, "cycYeastCycle.csv")
+##' cycMouseLiverProtein_infile <- file.path(temp_indir, "cycMouseLiverProtein.txt")
+##' 
+##' write.csv(cycSimu4h2d, file=cycSimu_infile, row.names=FALSE)
+##' write.csv(cycMouseLiverRNA, file=cycMouseLiverRNA_infile, row.names=FALSE)
+##' write.csv(cycYeastCycle, file=cycYeastCycle_infile, row.names=FALSE)
 ##'
 ##' # write 'cycMouseLiverProtein' into a 'txt' file
-##' write.table(cycMouseLiverProtein, file="cycMouseLiverProtein.txt",
+##' write.table(cycMouseLiverProtein, file=cycMouseLiverProtein_infile,
 ##'   sep="\t", quote=FALSE, row.names=FALSE)
-##'
+##'   
+##' # replace 'temp_outdir' with your target directory
+##' temp_outdir <- file.path(temp_indir, "example")
+##' # create the "example" directory (if it doesn't exist)
+##' if (!dir.exists(temp_outdir)) {
+##' dir.create(temp_outdir, recursive = TRUE)
+##' }
+##' 
 ##' # analyze 'cycMouseLiverRNA.csv' with JTK_CYCLE
 ##' # this is masked for keeping the total running time within 10s required by CRAN check
-##' # meta2d(infile="cycMouseLiverRNA.csv", filestyle="csv", outdir="example",
+##' # meta2d(infile=cycMouseLiverRNA_infile, filestyle="csv", outdir=temp_outdir,
 ##' #  timepoints=18:65, cycMethod="JTK", outIntegration="noIntegration")
 ##'
 ##' # analyze 'cycMouseLiverProtein.txt' with JTK_CYCLE and Lomb-Scargle
-##' meta2d(infile="cycMouseLiverProtein.txt", filestyle="txt",
-##'   outdir="example", timepoints=rep(seq(0, 45, by=3), each=3),
+##' meta2d(infile=cycMouseLiverProtein_infile, filestyle="txt",
+##'   outdir=temp_outdir, timepoints=rep(seq(0, 45, by=3), each=3),
 ##'   cycMethod=c("JTK","LS"), outIntegration="noIntegration")
 ##'
 ##' # analyze 'cycSimu4h2d.csv' with ARSER, JTK_CYCLE and Lomb-Scargle and
 ##' # output integration file with analysis results from each method
-##' meta2d(infile="cycSimu4h2d.csv", filestyle="csv", outdir="example",
+##' meta2d(infile=cycSimu_infile, filestyle="csv", outdir=temp_outdir,
 ##'   timepoints="Line1")
 ##'
 ##' # analyze 'cycYeastCycle.csv' with ARSER, JTK_CYCLE and Lomb-Scargle to
 ##' # detect transcripts associated with cell cycle, and only output
 ##' # integration file
-##' meta2d(infile="cycYeastCycle.csv",filestyle="csv", outdir="example",
+##' meta2d(infile=cycYeastCycle_infile,filestyle="csv", outdir=temp_outdir,
 ##'   minper=80, maxper=96, timepoints=seq(2, 162, by=16),
 ##'   outIntegration="onlyIntegration", ARSdefaultPer=85,
 ##'   outRawData=TRUE)
 ##' # return analysis results instead of output them into files
-##' cyc <- meta2d(infile="cycYeastCycle.csv",filestyle="csv",
+##' cyc <- meta2d(infile=cycYeastCycle_infile,filestyle="csv",
 ##'   minper=80, maxper=96, timepoints=seq(2, 162, by=16),
 ##'   outputFile=FALSE, ARSdefaultPer=85, outRawData=TRUE)
 ##' head(cyc$ARS)
@@ -214,6 +223,8 @@
 ##' head(cyc$meta)
 ##' @export
 ##' @importFrom gnm MPinv
+##' @importFrom utils read.table write.table flush.console
+##' @importFrom stats cov lm median p.adjust pchisq pf pnorm pt sd spec.ar var wilcox.test
 
 meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
                    maxper=28, cycMethod=c("ARS","JTK","LS"), analysisStrategy="auto",

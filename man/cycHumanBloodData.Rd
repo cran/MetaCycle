@@ -4,9 +4,11 @@
 \name{cycHumanBloodData}
 \alias{cycHumanBloodData}
 \title{cycHumanBloodData}
-\format{A dataframe containing 439 columns (column 1 = transcript name,
+\format{
+A dataframe containing 439 columns (column 1 = transcript name,
   column 2 to 439 = samples from individuals at different time points and
-  sleep conditions).}
+  sleep conditions).
+}
 \source{
 Moller-Levet C. S., et al. (2013). Effects of insufficient sleep on
   circadian rhythmicity and expression amplitude of the human blood
